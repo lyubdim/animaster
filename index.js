@@ -105,17 +105,17 @@ function animaster() {
         element.classList.remove('show');
         element.classList.add('hide');
     }
-    
+
     function resetFadeOut(element) {
         element.style.transitionDuration = null;
         element.classList.remove('hide');
     }
-    
+
     function resetMoveAndScale(element) {
         element.style.transitionDuration = null;
         element.style.transform = null;
     }
-    
+
     return {
         fadeIn,
         fadeOut,
@@ -181,6 +181,12 @@ function animaster() {
         addDelay(duration) {
             this._steps.push({ type: 'delay', duration });
             return this;
+        },
+        buildHandler() {
+            let instance = this;
+            return function(event) {
+                instance.play(event.currentTarget);
+            };
         },
         play(element, cycled = false) {
             const wasHidden = element.classList.contains('hide');
@@ -318,23 +324,33 @@ function addListeners() {
         .addEventListener('click', function () {
             const block = document.getElementById('heartBeatingBlock');
             if (block._heartBeatingAnimation) {
-                    block._heartBeatingAnimation.stop();
-                    block._heartBeatingAnimation = null;
-                }
-            });
-        document.getElementById('shadowPulsePlay')
-            .addEventListener('click', function () {
-                const block = document.getElementById('shadowPulseBlock');
-                block._shadowPulseAnimation = animaster().shadowPulse(block, 1000);
-            });
-        document.getElementById('shadowPulseReset')
-            .addEventListener('click', function () {
-                const block = document.getElementById('shadowPulseBlock');
-                if (block._shadowPulseAnimation) {
-                    block._shadowPulseAnimation.reset();
-                    block._shadowPulseAnimation = null;
-                }
-            });
+                block._heartBeatingAnimation.stop();
+                block._heartBeatingAnimation = null;
+            }
+        });
+    document.getElementById('shadowPulsePlay')
+        .addEventListener('click', function () {
+            const block = document.getElementById('shadowPulseBlock');
+            block._shadowPulseAnimation = animaster().shadowPulse(block, 1000);
+        });
+    document.getElementById('shadowPulseReset')
+        .addEventListener('click', function () {
+            const block = document.getElementById('shadowPulseBlock');
+            if (block._shadowPulseAnimation) {
+                block._shadowPulseAnimation.reset();
+                block._shadowPulseAnimation = null;
+            }
+        });
+
+    const worryAnimationHandler = animaster()
+        .addMove(200, { x: 80, y: 0 })
+        .addMove(200, { x: 0, y: 0 })
+        .addMove(200, { x: 80, y: 0 })
+        .addMove(200, { x: 0, y: 0 })
+        .buildHandler();
+        
+    document.getElementById('worryAnimationBlock')
+        .addEventListener('click', worryAnimationHandler);
 }
 
 function getTransform(translation, ratio) {
