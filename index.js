@@ -79,16 +79,21 @@ function animaster() {
      * @param duration — Продолжительность анимации в миллисекундах
      */
     function heartBeating(element, duration = 500) {
+        let stopped = false;
         let timeoutIds = [];
         const intervalId = setInterval(() => {
+            if (stopped) return;
             scale(element, duration, 1.4);
             const tId = setTimeout(() => {
-                scale(element, duration, 1);
+                if (!stopped) {
+                    scale(element, duration, 1);
+                }
             }, duration);
             timeoutIds.push(tId);
         }, duration * 2);
         return {
             stop: () => {
+                stopped = true;
                 clearInterval(intervalId);
                 timeoutIds.forEach(clearTimeout);
             }
@@ -134,6 +139,24 @@ function animaster() {
             this.addScale(duration, 1.4)
                 .addScale(duration, 1);
             return this.play(element, true);
+        },
+        shadowPulse(element, duration) {
+            const originalBoxShadow = element.style.boxShadow;
+            element.style.transition = `box-shadow ${duration / 2}ms ease-in-out`;
+            element.style.boxShadow = "0 0 20px 5px rgba(0,0,0,0.7)";
+            const timeoutId = setTimeout(() => {
+                element.style.boxShadow = originalBoxShadow || "none";
+            }, duration / 2);
+            return {
+                stop: () => {
+                    clearTimeout(timeoutId);
+                    element.style.boxShadow = originalBoxShadow || "none";
+                },
+                reset: () => {
+                    element.style.transition = "";
+                    element.style.boxShadow = originalBoxShadow || "";
+                }
+            };
         },
         _resetFadeIn: resetFadeIn,
         _resetFadeOut: resetFadeOut,
@@ -295,10 +318,23 @@ function addListeners() {
         .addEventListener('click', function () {
             const block = document.getElementById('heartBeatingBlock');
             if (block._heartBeatingAnimation) {
-                block._heartBeatingAnimation.stop();
-                block._heartBeatingAnimation = null;
-            }
-        });
+                    block._heartBeatingAnimation.stop();
+                    block._heartBeatingAnimation = null;
+                }
+            });
+        document.getElementById('shadowPulsePlay')
+            .addEventListener('click', function () {
+                const block = document.getElementById('shadowPulseBlock');
+                block._shadowPulseAnimation = animaster().shadowPulse(block, 1000);
+            });
+        document.getElementById('shadowPulseReset')
+            .addEventListener('click', function () {
+                const block = document.getElementById('shadowPulseBlock');
+                if (block._shadowPulseAnimation) {
+                    block._shadowPulseAnimation.reset();
+                    block._shadowPulseAnimation = null;
+                }
+            });
 }
 
 function getTransform(translation, ratio) {
